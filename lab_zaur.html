@@ -1,0 +1,1268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>lab_zaur v4.4 (Avg Update)</title>
+    
+    <!-- React & ReactDOM -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background-color: #050505;
+            color: #e5e5e5; 
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+        }
+        
+        /* --- Background Depth Effects --- */
+        .bg-fixed-layer {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            z-index: -1;
+            pointer-events: none;
+            overflow: hidden;
+        }
+
+        .bg-grid {
+            position: absolute;
+            inset: 0;
+            background-image: 
+                linear-gradient(to right, rgba(255,255,255,0.03) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(255,255,255,0.03) 1px, transparent 1px);
+            background-size: 60px 60px;
+            mask-image: radial-gradient(circle at 50% 50%, black 40%, transparent 100%);
+        }
+
+        .bg-glow {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(100px);
+            opacity: 0.4;
+            animation: float 10s ease-in-out infinite;
+        }
+
+        .glow-orange {
+            top: -150px;
+            left: -150px;
+            width: 700px;
+            height: 700px;
+            background: radial-gradient(circle, rgba(249, 115, 22, 0.15) 0%, rgba(0,0,0,0) 70%);
+        }
+
+        .glow-cool {
+            bottom: -200px;
+            right: -200px;
+            width: 800px;
+            height: 800px;
+            background: radial-gradient(circle, rgba(30, 41, 59, 0.3) 0%, rgba(0,0,0,0) 70%);
+            animation-delay: -5s;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0); }
+            50% { transform: translate(20px, 20px); }
+        }
+
+        /* --- Existing Styles --- */
+        .glass-panel {
+            background: rgba(20, 20, 20, 0.65);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .ghost-input {
+            background: transparent;
+            border: none;
+            outline: none;
+            color: inherit;
+            width: 100%;
+            transition: all 0.2s;
+        }
+        .note-input {
+            font-size: 0.85rem;
+            color: #525252;
+            border-bottom: 1px solid transparent;
+            transition: all 0.3s ease;
+        }
+        .note-input:focus, .note-input:hover, .note-input:not(:placeholder-shown) {
+            border-bottom-color: #374151;
+            color: #a3a3a3;
+        }
+        .note-input:focus {
+            border-bottom-color: #f97316;
+            color: #e5e5e5;
+        }
+
+        input[type="date"] {
+            background-color: transparent;
+            color: #e5e5e5;
+            border: 1px solid #404040;
+            border-radius: 4px;
+            padding: 2px 4px;
+            font-family: inherit;
+            font-size: 0.75rem;
+            color-scheme: dark;
+            outline: none;
+        }
+        input[type="date"]:focus {
+            border-color: #f97316;
+        }
+        input[type="date"]::-webkit-calendar-picker-indicator {
+            filter: invert(1);
+            opacity: 0.6;
+            cursor: pointer;
+            width: 14px;
+            height: 14px;
+        }
+        input[type="date"]::-webkit-calendar-picker-indicator:hover {
+            opacity: 1;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(10px) scale(0.98); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        @keyframes growBar {
+            from { height: 0; }
+        }
+        
+        .animate-enter {
+            animation: slideIn 0.4s cubic-bezier(0.2, 0, 0.2, 1) forwards;
+            opacity: 0;
+        }
+        
+        .bar-grow {
+            animation: growBar 1s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+            transform-origin: bottom;
+        }
+
+        /* Updated scrollbar styles to support horizontal height */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #404040; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #525252; }
+        
+        input[type="number"]::-webkit-inner-spin-button,
+        input[type="number"]::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        
+        .drag-overlay {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(249, 115, 22, 0.15);
+            backdrop-filter: blur(6px);
+            border: 4px dashed #f97316;
+            z-index: 9999;
+            display: flex; align-items: center; justify-content: center;
+            pointer-events: none; opacity: 0; transition: opacity 0.2s ease;
+        }
+        .drag-overlay.active { opacity: 1; }
+        
+        .chart-tooltip {
+            opacity: 0;
+            transform: translateY(10px) translateX(-50%);
+            pointer-events: none;
+            transition: all 0.2s ease;
+            left: 50%;
+        }
+        .group:hover .chart-tooltip {
+            opacity: 1;
+            transform: translateY(0) translateX(-50%);
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.7);
+            backdrop-filter: blur(5px);
+            z-index: 50;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Easter Egg Canvas */
+        #solitaire-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 9998; /* Just below drag overlay */
+            pointer-events: none; /* Let clicks pass through, JS handles triggers */
+            image-rendering: pixelated;
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-fixed-layer">
+        <div class="bg-grid"></div>
+        <div class="bg-glow glow-orange"></div>
+        <div class="bg-glow glow-cool"></div>
+    </div>
+
+    <!-- Easter Egg Canvas -->
+    <canvas id="solitaire-canvas"></canvas>
+
+    <div id="root"></div>
+
+    <!-- Main App Script -->
+    <script type="text/babel">
+        const { useState, useEffect, useRef, useMemo, useCallback, memo } = React;
+
+        // --- CONSTANTS & UTILS ---
+        const STORAGE_KEYS = {
+            DATA: 'dentalTrackerData_v3',
+            PRICE: 'dentalPricePerUnit',
+            RATE: 'dentalRubleRate',
+            PAYMENTS: 'dentalPaymentHistory_v1'
+        };
+
+        const Icons = {
+            Logo: () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/><path d="M9 14l2 2 4-4"/></svg>,
+            Export: () => <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>,
+            Check: () => <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><polyline points="20 6 9 17 4 12"></polyline></svg>,
+            Trash: () => <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>,
+            Wallet: () => <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg>,
+            FileText: () => <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>,
+            
+            // View Mode Icons
+            LayoutList: () => <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>,
+            LayoutCompact: () => <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>,
+            LayoutGrid: () => <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+        };
+
+        const parseDateKey = (dateStr, mode = 'monthly') => {
+            if (!dateStr) return 'Unknown';
+            const parts = dateStr.split('/');
+            if (parts.length !== 3) return 'Unknown';
+            // FIX: Ensure padding for correct key matching (e.g., 2023-01 vs 2023-1)
+            const d = parts[0].padStart(2, '0');
+            const m = parts[1].padStart(2, '0');
+            const y = parts[2];
+            return mode === 'daily' ? `${y}-${m}-${d}` : `${y}-${m}`; 
+        };
+
+        const getMonthName = (key, mode) => {
+            if (key === 'Unknown') return 'Unknown';
+            const [year, month, day] = key.split('-');
+            const date = new Date(parseInt(year), parseInt(month) - 1, day ? parseInt(day) : 1);
+            return mode === 'daily' 
+                ? date.toLocaleString('en-US', { day: 'numeric', month: 'short' })
+                : date.toLocaleString('en-US', { month: 'short', year: '2-digit' });
+        };
+        
+        const getFullMonthName = (key, mode) => {
+            if (key === 'Unknown') return 'Unknown';
+            const [year, month, day] = key.split('-');
+            const date = new Date(parseInt(year), parseInt(month) - 1, day ? parseInt(day) : 1);
+            return mode === 'daily' 
+                ? date.toLocaleString('en-US', { weekday: 'short', day: 'numeric', month: 'long', year: 'numeric' })
+                : date.toLocaleString('en-US', { month: 'long', year: 'numeric' });
+        };
+
+        const toInputDate = (displayDate) => {
+            if(!displayDate) return new Date().toISOString().split('T')[0];
+            const parts = displayDate.split('/');
+            if(parts.length !== 3) return new Date().toISOString().split('T')[0];
+            const d = parts[0].padStart(2, '0');
+            const m = parts[1].padStart(2, '0');
+            const y = parts[2];
+            return `${y}-${m}-${d}`;
+        };
+
+        const fromInputDate = (inputDate) => {
+            if(!inputDate) return '';
+            const parts = inputDate.split('-');
+            return `${parts[2]}/${parts[1]}/${parts[0]}`;
+        };
+
+        // --- SUB-COMPONENTS ---
+
+        const SortBtn = memo(({ label, sortKey, currentConfig, onSort }) => (
+            <button 
+                onClick={() => onSort(sortKey)}
+                className={`text-xs font-medium flex items-center gap-1 transition-colors ${currentConfig.key === sortKey ? 'text-orange-500' : 'text-neutral-500 hover:text-neutral-300'}`}
+            >
+                {label}
+                {currentConfig.key === sortKey && (
+                    <span>{currentConfig.direction === 'desc' ? '↓' : '↑'}</span>
+                )}
+            </button>
+        ));
+
+        // MODIFIED: Updated StatCard to handle clicks and hover state
+        const StatCard = memo(({ label, value, labelColor = "text-neutral-500", valueColor = "text-white", onClick }) => (
+            <div 
+                onClick={onClick}
+                className={`glass-panel p-4 rounded-xl flex flex-col items-center justify-center transition-colors duration-300 ${onClick ? 'cursor-pointer hover:bg-neutral-800 hover:border-orange-500/30' : 'cursor-default hover:bg-white/5'}`}
+            >
+                <span className={`text-[10px] font-bold uppercase mb-1 ${labelColor}`}>{label}</span>
+                <span className={`text-xl font-bold ${valueColor}`}>{value}</span>
+            </div>
+        ));
+
+        // NEW: Average Settings Modal
+        const AvgSettingsModal = ({ isOpen, onClose, currentFrame, onFrameChange, currentLookback, onLookbackChange }) => {
+            if (!isOpen) return null;
+            
+            const periods = currentFrame === 'monthly' 
+                ? [ {v:0, l:'All Time'}, {v:3, l:'Last 3 Months'}, {v:6, l:'Last 6 Months'}, {v:12, l:'Last Year'} ]
+                : [ {v:0, l:'All Time'}, {v:7, l:'Last 7 Days'}, {v:30, l:'Last 30 Days'}, {v:90, l:'Last 90 Days'} ];
+
+            return (
+                <div className="modal-overlay" onClick={onClose}>
+                    <div className="glass-panel p-5 rounded-2xl w-80 animate-enter" onClick={e => e.stopPropagation()}>
+                        <div className="flex justify-between items-center mb-4">
+                            <h3 className="font-bold text-white flex items-center gap-2">
+                                <span className="text-orange-500"><Icons.LayoutCompact /></span> 
+                                Avg Calculation
+                            </h3>
+                            <button onClick={onClose} className="text-neutral-500 hover:text-white transition-colors">✕</button>
+                        </div>
+
+                        <div className="space-y-4">
+                            <div>
+                                <label className="text-[10px] uppercase font-bold text-neutral-500 mb-2 block">Time Unit</label>
+                                <div className="grid grid-cols-2 gap-2">
+                                    {['monthly', 'daily'].map(mode => (
+                                        <button 
+                                            key={mode}
+                                            onClick={() => onFrameChange(mode)}
+                                            className={`py-2 px-3 rounded-lg text-xs font-bold capitalize transition-all ${currentFrame === mode ? 'bg-orange-600 text-white shadow-lg shadow-orange-900/20' : 'bg-neutral-800 text-neutral-400 hover:bg-neutral-700'}`}
+                                        >
+                                            {mode}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
+                            <div>
+                                <label className="text-[10px] uppercase font-bold text-neutral-500 mb-2 block">Period Range</label>
+                                <div className="grid grid-cols-2 gap-2">
+                                    {periods.map(p => (
+                                        <button 
+                                            key={p.v}
+                                            onClick={() => onLookbackChange(p.v)}
+                                            className={`py-2 px-3 rounded-lg text-xs font-medium transition-all ${currentLookback === p.v ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-900/20' : 'bg-neutral-800 text-neutral-400 hover:bg-neutral-700'}`}
+                                        >
+                                            {p.l}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                            
+                            <p className="text-[10px] text-neutral-600 text-center pt-2">
+                                Calculates average based on selected history.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        const PaymentModal = ({ isOpen, onClose, onSubmit, currencySymbol }) => {
+            const [amount, setAmount] = useState('');
+            const [note, setNote] = useState('');
+
+            if (!isOpen) return null;
+
+            const handleSubmit = (e) => {
+                e.preventDefault();
+                if (!amount) return;
+                onSubmit(parseFloat(amount), note);
+                setAmount('');
+                setNote('');
+                onClose();
+            };
+
+            return (
+                <div className="modal-overlay" onClick={onClose}>
+                    <div className="glass-panel p-6 rounded-2xl w-full max-w-sm m-4 animate-enter" onClick={e => e.stopPropagation()}>
+                        <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                            <span className="text-emerald-500"><Icons.Wallet /></span>
+                            Add Deposit
+                        </h2>
+                        <p className="text-xs text-neutral-400 mb-6">
+                            This amount will automatically pay off the oldest unpaid items first (FIFO).
+                        </p>
+                        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+                            <div>
+                                <label className="text-[10px] uppercase font-bold text-neutral-500 mb-1 block">Amount ({currencySymbol})</label>
+                                <input 
+                                    type="number" 
+                                    autoFocus
+                                    className="w-full bg-neutral-900 border border-neutral-700 rounded-lg p-3 text-2xl font-bold text-white outline-none focus:border-emerald-500 transition-colors"
+                                    placeholder="0"
+                                    value={amount}
+                                    onChange={e => setAmount(e.target.value)}
+                                />
+                            </div>
+                            <div>
+                                <label className="text-[10px] uppercase font-bold text-neutral-500 mb-1 block">Note (Optional)</label>
+                                <input 
+                                    type="text" 
+                                    className="w-full bg-neutral-900 border border-neutral-700 rounded-lg p-3 text-sm text-white outline-none focus:border-neutral-500 transition-colors"
+                                    placeholder="e.g. November Payment"
+                                    value={note}
+                                    onChange={e => setNote(e.target.value)}
+                                />
+                            </div>
+                            <div className="flex gap-2 pt-2">
+                                <button type="button" onClick={onClose} className="flex-1 py-3 rounded-xl bg-neutral-800 text-neutral-400 hover:bg-neutral-700 font-medium transition-colors">Cancel</button>
+                                <button type="submit" className="flex-1 py-3 rounded-xl bg-emerald-600 text-white hover:bg-emerald-500 font-bold shadow-lg shadow-emerald-900/20 transition-all transform active:scale-95">Add Deposit</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            );
+        };
+
+        const PatientRow = memo(({ p, index, pricePerUnit, editingDateId, viewMode, onTogglePaid, onUpdateDate, onSetEditingDate, onUpdateName, onUpdateNote, onUpdateUnits, onDelete, formatMoney }) => {
+            const isGrid = viewMode === 'grid';
+            const isCompact = viewMode === 'compact';
+            
+            const containerClass = useMemo(() => {
+                if (isGrid) return `relative group flex flex-col p-2 rounded-lg border border-white/5 hover:border-orange-500/30 hover:bg-white/[0.03] transition-all duration-300 animate-enter ${p.paid ? 'opacity-60 bg-black/20' : 'bg-neutral-900/40'}`;
+                if (isCompact) return `group flex items-center py-1.5 px-2 border border-transparent hover:border-white/5 hover:bg-white/[0.02] rounded transition-all duration-300 ${p.paid ? 'opacity-60' : ''}`;
+                return `group flex items-center p-3 hover:bg-white/[0.02] transition-all duration-300 ${p.paid ? 'bg-white/[0.02]' : ''}`;
+            }, [isGrid, isCompact, p.paid]);
+
+            const checkboxClass = isGrid
+                ? `absolute top-2 left-2 z-10 w-5 h-5 rounded-full border flex items-center justify-center transition-all duration-300 ${p.paid ? 'bg-emerald-600 border-emerald-600 text-white' : 'border-neutral-600 bg-neutral-900 hover:border-orange-500'}`
+                : `flex-shrink-0 rounded-full border flex items-center justify-center transition-all duration-300 ${isCompact ? 'w-3 h-3 mr-2 border-[1.5px]' : 'w-5 h-5 mr-3 border-2'} ${p.paid ? 'bg-emerald-600 border-emerald-600 text-white scale-110' : 'border-neutral-600 hover:border-orange-500 hover:scale-110'}`;
+
+            const nameClass = isGrid
+                ? `ghost-input font-bold text-sm w-full pl-7 mb-1 ${p.paid ? 'text-neutral-500 line-through' : 'text-white'}`
+                : `ghost-input font-medium ${isCompact ? 'text-xs' : 'text-base'} ${p.paid ? 'text-neutral-600 line-through' : 'text-neutral-200'}`;
+
+            return (
+                <div 
+                    className={containerClass}
+                    style={{animationDelay: `${Math.min(index * 0.02, 0.5)}s`}}
+                >
+                    <button onClick={() => onTogglePaid(p.id)} className={checkboxClass}>
+                        {p.paid && <Icons.Check />} 
+                    </button>
+
+                    {isGrid ? (
+                        <>
+                            <input 
+                                className={nameClass} 
+                                value={p.name} 
+                                onChange={(e) => onUpdateName(p.id, e.target.value)} 
+                            />
+                            <div className="pl-7 flex flex-col gap-1 flex-grow">
+                                <div className="h-4 flex items-center">
+                                    {editingDateId === p.id ? (
+                                        <input 
+                                            type="date" 
+                                            autoFocus
+                                            className="w-full text-[10px]"
+                                            value={toInputDate(p.date)} 
+                                            onChange={(e) => onUpdateDate(p.id, e.target.value)}
+                                            onBlur={() => onSetEditingDate(null)}
+                                        />
+                                    ) : (
+                                        <span 
+                                            onClick={() => onSetEditingDate(p.id)}
+                                            className="text-[10px] text-neutral-500 hover:text-orange-500 cursor-pointer transition-colors duration-200"
+                                        >
+                                            {p.date}
+                                        </span>
+                                    )}
+                                </div>
+                                <div className="text-[10px] text-neutral-500 truncate h-4">{p.note}</div>
+                            </div>
+                            <div className="mt-2 pt-2 border-t border-white/5 flex items-center justify-between">
+                                <button onClick={() => onDelete(p.id)} className="text-neutral-600 hover:text-rose-500 transition-colors p-1">
+                                    <Icons.Trash />
+                                </button>
+                                <div className="text-right">
+                                    <input 
+                                        type="number" 
+                                        className={`ghost-input w-12 font-mono text-sm font-bold text-right transition-colors ${p.paid ? 'text-neutral-600' : 'text-white'} ${!p.units ? 'text-rose-500' : ''}`} 
+                                        value={p.units || ''} 
+                                        placeholder="0" 
+                                        onChange={(e) => onUpdateUnits(p.id, e.target.value)} 
+                                    />
+                                    {pricePerUnit > 0 && <div className="text-[9px] text-neutral-500 text-right">{formatMoney((p.units || 0) * pricePerUnit)}</div>}
+                                </div>
+                            </div>
+                        </>
+                    ) : (
+                        <>
+                            <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3 flex-grow min-w-0 mr-2">
+                                <div className="flex flex-col flex-grow min-w-0">
+                                    <input 
+                                        className={nameClass} 
+                                        value={p.name} 
+                                        onChange={(e) => onUpdateName(p.id, e.target.value)} 
+                                    />
+                                    
+                                    <div className="h-4 flex items-center">
+                                        {editingDateId === p.id ? (
+                                            <input 
+                                                type="date" 
+                                                autoFocus
+                                                className={isCompact ? "text-[10px]" : ""}
+                                                value={toInputDate(p.date)} 
+                                                onChange={(e) => onUpdateDate(p.id, e.target.value)}
+                                                onBlur={() => onSetEditingDate(null)}
+                                            />
+                                        ) : (
+                                            <span 
+                                                onClick={() => onSetEditingDate(p.id)}
+                                                className={`text-neutral-500 hover:text-orange-500 cursor-pointer transition-colors duration-200 flex items-center gap-1 ${isCompact ? 'text-[10px] mt-0.5' : 'text-[10px]'}`}
+                                            >
+                                                {p.date}
+                                            </span>
+                                        )}
+                                    </div>
+                                </div>
+                                <input 
+                                    type="text" 
+                                    placeholder={isCompact ? "..." : ""} 
+                                    className={`ghost-input note-input w-full sm:w-40 ${isCompact ? 'text-xs' : 'text-sm'}`} 
+                                    value={p.note || ''} 
+                                    onChange={(e) => onUpdateNote(p.id, e.target.value)} 
+                                />
+                            </div>
+                            <div className="flex items-center gap-3 pl-0 sm:pl-2 whitespace-nowrap">
+                                <div className="text-right">
+                                    <input 
+                                        type="number" 
+                                        className={`ghost-input font-mono font-bold text-right transition-colors ${p.paid ? 'text-neutral-600' : 'text-white'} ${!p.units ? 'text-rose-500' : ''} ${isCompact ? 'text-sm w-10' : 'text-lg w-12'}`} 
+                                        value={p.units || ''} 
+                                        placeholder="0" 
+                                        onChange={(e) => onUpdateUnits(p.id, e.target.value)} 
+                                    />
+                                    {pricePerUnit > 0 && !isCompact && <div className="text-[10px] text-neutral-500 text-right">{formatMoney((p.units || 0) * pricePerUnit)}</div>}
+                                </div>
+                                <button onClick={() => onDelete(p.id)} className={`text-neutral-600 hover:text-rose-500 rounded transition-all duration-300 hover:scale-110 ${isCompact ? 'opacity-0 group-hover:opacity-100 p-0.5 scale-75' : 'opacity-0 group-hover:opacity-100 p-1'}`}>
+                                    <Icons.Trash />
+                                </button>
+                            </div>
+                        </>
+                    )}
+                </div>
+            );
+        }, (prev, next) => {
+            return prev.p === next.p && 
+                   prev.editingDateId === next.editingDateId && 
+                   prev.pricePerUnit === next.pricePerUnit &&
+                   prev.formatMoney === next.formatMoney &&
+                   prev.viewMode === next.viewMode; 
+        });
+
+        // --- MAIN APP ---
+        const App = () => {
+            // --- STATE ---
+            const [patients, setPatients] = useState(() => {
+                const saved = localStorage.getItem(STORAGE_KEYS.DATA);
+                return saved ? JSON.parse(saved) : [];
+            });
+            const [pricePerUnit, setPricePerUnit] = useState(() => {
+                const saved = localStorage.getItem(STORAGE_KEYS.PRICE);
+                return saved ? parseFloat(saved) : 0;
+            });
+            const [rubleRate, setRubleRate] = useState(() => {
+                const saved = localStorage.getItem(STORAGE_KEYS.RATE);
+                return saved ? parseFloat(saved) : 70; 
+            });
+            const [paymentHistory, setPaymentHistory] = useState(() => {
+                const saved = localStorage.getItem(STORAGE_KEYS.PAYMENTS);
+                return saved ? JSON.parse(saved) : [];
+            });
+
+            const [activeCurrency, setActiveCurrency] = useState('CAD');
+            const [view, setView] = useState('dashboard');
+            const [filter, setFilter] = useState('all');
+            const [searchQuery, setSearchQuery] = useState('');
+            const [sortConfig, setSortConfig] = useState({ key: 'date', direction: 'desc' });
+            const [showMoneyInStats, setShowMoneyInStats] = useState(false);
+            const [statsTimeframe, setStatsTimeframe] = useState('monthly');
+            const [name, setName] = useState('');
+            const [units, setUnits] = useState('');
+            const [editingDateId, setEditingDateId] = useState(null);
+            const [isDragging, setIsDragging] = useState(false);
+            const [viewMode, setViewMode] = useState('list');
+            const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
+            
+            // NEW STATES for Avg Modal
+            const [isAvgModalOpen, setIsAvgModalOpen] = useState(false);
+            const [avgLookback, setAvgLookback] = useState(0); // 0 = all time
+
+            const nameInputRef = useRef(null);
+
+            // --- PERSISTENCE ---
+            useEffect(() => { localStorage.setItem(STORAGE_KEYS.DATA, JSON.stringify(patients)); }, [patients]);
+            useEffect(() => { localStorage.setItem(STORAGE_KEYS.PRICE, pricePerUnit); }, [pricePerUnit]);
+            useEffect(() => { localStorage.setItem(STORAGE_KEYS.RATE, rubleRate); }, [rubleRate]);
+            useEffect(() => { localStorage.setItem(STORAGE_KEYS.PAYMENTS, JSON.stringify(paymentHistory)); }, [paymentHistory]);
+
+            // --- RATES ---
+            useEffect(() => {
+                const fetchRate = async () => {
+                    try {
+                        const res = await fetch('https://api.exchangerate-api.com/v4/latest/CAD');
+                        if(res.ok) {
+                            const data = await res.json();
+                            if (data?.rates?.RUB) { setRubleRate(data.rates.RUB); return; }
+                        }
+                        throw new Error("Primary API failed");
+                    } catch (e) {
+                        try {
+                            const resBackup = await fetch('https://open.er-api.com/v6/latest/CAD');
+                            const dataBackup = await resBackup.json();
+                            if (dataBackup?.rates?.RUB) setRubleRate(dataBackup.rates.RUB);
+                        } catch (e2) {}
+                    }
+                };
+                fetchRate();
+                const interval = setInterval(fetchRate, 1000 * 60 * 60);
+                return () => clearInterval(interval);
+            }, []);
+
+            // --- LOGIC ---
+            const getMultiplier = useCallback(() => activeCurrency === 'RUB' ? rubleRate : 1, [activeCurrency, rubleRate]);
+            const getSymbol = useCallback(() => activeCurrency === 'RUB' ? '₽' : 'C$', [activeCurrency]);
+
+            const formatMoney = useCallback((val) => {
+                const m = getMultiplier();
+                return `${getSymbol()} ${(val * m).toLocaleString('en-US', {maximumFractionDigits:0})}`;
+            }, [getMultiplier, getSymbol]);
+
+            const formatMoneySimple = useCallback((val) => {
+                const m = getMultiplier();
+                return (val * m).toLocaleString('en-US', {maximumFractionDigits:0});
+            }, [getMultiplier]);
+
+            const handleAdd = useCallback((e) => {
+                e.preventDefault();
+                if (!name.trim()) return;
+                const newPatient = { 
+                    id: Date.now(), 
+                    name: name.trim(), 
+                    units: units ? parseFloat(units) : 0, 
+                    paid: false, 
+                    note: '', 
+                    date: new Date().toLocaleDateString('en-GB') 
+                };
+                setPatients(prev => [newPatient, ...prev]);
+                setName(''); setUnits('');
+                if (nameInputRef.current) nameInputRef.current.focus();
+            }, [name, units]);
+
+            const updateField = useCallback((id, field, value) => {
+                 setPatients(prev => prev.map(p => p.id === id ? { ...p, [field]: value } : p));
+            }, []);
+
+            const updateDate = useCallback((id, newDateInput) => {
+                const formatted = fromInputDate(newDateInput);
+                updateField(id, 'date', formatted);
+                setEditingDateId(null); 
+            }, [updateField]);
+
+            const togglePaid = useCallback((id) => {
+                setPatients(prev => prev.map(p => p.id === id ? { ...p, paid: !p.paid } : p));
+            }, []);
+            
+            const deletePatient = useCallback((id) => {
+                if(confirm('Delete this record?')) {
+                    setPatients(prev => prev.filter(p => p.id !== id));
+                }
+            }, []);
+
+            // --- AUTO PAYMENT LOGIC (FIFO) ---
+            const handleAutoPayment = useCallback((depositAmount, note) => {
+                if (depositAmount <= 0) return;
+
+                const newPayment = {
+                    id: Date.now(),
+                    date: new Date().toLocaleDateString('en-GB'),
+                    amount: depositAmount,
+                    note: note,
+                    currency: activeCurrency
+                };
+
+                setPaymentHistory(prev => [newPayment, ...prev]);
+
+                const multiplier = activeCurrency === 'RUB' ? rubleRate : 1;
+                let remainingValueCAD = activeCurrency === 'RUB' ? depositAmount / rubleRate : depositAmount;
+
+                setPatients(prevPatients => {
+                    const unpaid = prevPatients.filter(p => !p.paid);
+                    const parseD = (dStr) => {
+                        const parts = dStr.split('/');
+                        return new Date(parts[2], parts[1]-1, parts[0]).getTime();
+                    };
+                    unpaid.sort((a, b) => parseD(a.date) - parseD(b.date));
+
+                    const idsToPay = new Set();
+                    for (let p of unpaid) {
+                        const costCAD = (p.units || 0) * pricePerUnit;
+                        if (costCAD > 0 && costCAD <= remainingValueCAD + 0.01) { 
+                            remainingValueCAD -= costCAD;
+                            idsToPay.add(p.id);
+                        } else if (remainingValueCAD <= 0) {
+                            break;
+                        }
+                    }
+                    return prevPatients.map(p => idsToPay.has(p.id) ? { ...p, paid: true } : p);
+                });
+            }, [activeCurrency, rubleRate, pricePerUnit]);
+
+            const handleSort = useCallback((key) => {
+                setSortConfig(prev => ({
+                    key,
+                    direction: prev.key === key && prev.direction === 'desc' ? 'asc' : 'desc'
+                }));
+            }, []);
+
+            const onDragOver = useCallback((e) => { e.preventDefault(); setIsDragging(true); }, []);
+            const onDragLeave = useCallback((e) => { e.preventDefault(); setIsDragging(false); }, []);
+            const onDrop = useCallback((e) => {
+                e.preventDefault(); setIsDragging(false);
+                const file = e.dataTransfer.files[0];
+                if (file && file.name.endsWith('.json')) {
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                        try {
+                            const data = JSON.parse(event.target.result);
+                            if (data.patients && confirm(`Load backup with ${data.patients.length} records?`)) {
+                                setPatients(data.patients);
+                                if (data.pricePerUnit) setPricePerUnit(data.pricePerUnit);
+                                if (data.rubleRate) setRubleRate(data.rubleRate);
+                                if (data.paymentHistory) setPaymentHistory(data.paymentHistory);
+                            }
+                        } catch(err) { alert('Invalid file'); }
+                    };
+                    reader.readAsText(file);
+                }
+            }, []);
+
+            // --- CALCULATIONS ---
+            const processedPatients = useMemo(() => {
+                let data = patients.filter(p => {
+                    const f = filter === 'all' ? true : (filter === 'paid' ? p.paid : !p.paid);
+                    return f && (p.name.toLowerCase().includes(searchQuery.toLowerCase()) || p.note.toLowerCase().includes(searchQuery.toLowerCase()));
+                });
+                data.sort((a, b) => {
+                    let valA = a[sortConfig.key], valB = b[sortConfig.key];
+                    if (sortConfig.key === 'date') { valA = toInputDate(a.date); valB = toInputDate(b.date); }
+                    if (sortConfig.key === 'units') { valA = parseFloat(valA) || 0; valB = parseFloat(valB) || 0; }
+                    if (typeof valA === 'string') valA = valA.toLowerCase(); if (typeof valB === 'string') valB = valB.toLowerCase();
+                    if (valA < valB) return sortConfig.direction === 'asc' ? -1 : 1;
+                    if (valA > valB) return sortConfig.direction === 'asc' ? 1 : -1;
+                    return 0;
+                });
+                return data;
+            }, [patients, filter, searchQuery, sortConfig]);
+
+            const totals = useMemo(() => {
+                const totalUnits = patients.reduce((acc, p) => acc + (parseFloat(p.units)||0), 0);
+                const paidUnits = patients.filter(p => p.paid).reduce((acc, p) => acc + (parseFloat(p.units)||0), 0);
+                return {
+                    totalUnits, paidUnits, unpaidUnits: totalUnits - paidUnits,
+                    totalMoney: totalUnits * pricePerUnit,
+                    paidMoney: paidUnits * pricePerUnit
+                };
+            }, [patients, pricePerUnit]);
+
+            // --- RESTORED & FIXED STATS LOGIC ---
+            const statsData = useMemo(() => {
+                const groups = {};
+                let maxGroupTotal = 0;
+                let grandTotalUnits = 0;
+                let grandTotalValue = 0;
+
+                // 1. Group existing data
+                patients.forEach(p => {
+                    const key = parseDateKey(p.date, statsTimeframe);
+                    if (!groups[key]) groups[key] = { totalUnits: 0, paidUnits: 0, totalVal: 0, paidVal: 0 };
+                    
+                    const u = parseFloat(p.units) || 0;
+                    const val = u * pricePerUnit;
+
+                    groups[key].totalUnits += u;
+                    groups[key].totalVal += val;
+                    if (p.paid) {
+                        groups[key].paidUnits += u;
+                        groups[key].paidVal += val;
+                    }
+                    grandTotalUnits += u;
+                    grandTotalValue += val;
+                });
+
+                // 2. Generate Continuous Date Range
+                const timestamps = patients
+                    .map(p => {
+                        if(!p.date) return null;
+                        const parts = p.date.split('/');
+                        if(parts.length !== 3) return null;
+                        // Use consistent padding for date parsing to avoid invalid dates
+                        const d = parseInt(parts[0], 10);
+                        const m = parseInt(parts[1], 10) - 1;
+                        const y = parseInt(parts[2], 10);
+                        const date = new Date(y, m, d);
+                        return date.getTime();
+                    })
+                    .filter(t => t && !isNaN(t));
+
+                let startDate = new Date();
+                let endDate = new Date();
+
+                if (timestamps.length > 0) {
+                    startDate = new Date(Math.min(...timestamps));
+                    endDate = new Date(Math.max(...timestamps));
+                }
+
+                // Ensure we go up to today if max date is in past
+                const today = new Date();
+                today.setHours(0,0,0,0);
+                if (endDate < today) endDate = today;
+
+                const allKeys = [];
+                let cursor = new Date(startDate);
+
+                if (statsTimeframe === 'monthly') {
+                    // Normalize to 1st of month to avoid overflow issues (e.g. Jan 31 -> Feb 28/29)
+                    cursor.setDate(1);
+                    const endMonth = new Date(endDate);
+                    endMonth.setDate(1);
+                    
+                    while (cursor <= endMonth) {
+                        const y = cursor.getFullYear();
+                        const m = String(cursor.getMonth() + 1).padStart(2, '0');
+                        allKeys.push(`${y}-${m}`);
+                        cursor.setMonth(cursor.getMonth() + 1);
+                    }
+                } else {
+                    // Daily
+                    cursor.setHours(0,0,0,0);
+                    const endDay = new Date(endDate);
+                    endDay.setHours(0,0,0,0);
+                    
+                    while (cursor <= endDay) {
+                        const y = cursor.getFullYear();
+                        const m = String(cursor.getMonth() + 1).padStart(2, '0');
+                        const d = String(cursor.getDate()).padStart(2, '0');
+                        allKeys.push(`${y}-${m}-${d}`);
+                        cursor.setDate(cursor.getDate() + 1);
+                    }
+                }
+
+                // 3. Map keys to data (Filling gaps)
+                const chartDataRaw = allKeys.map(key => {
+                    const d = groups[key] || { totalUnits: 0, paidUnits: 0, totalVal: 0, paidVal: 0 };
+                    const metric = showMoneyInStats ? d.totalVal : d.totalUnits;
+                    if (metric > maxGroupTotal) maxGroupTotal = metric;
+                    return { key, shortName: getMonthName(key, statsTimeframe), fullName: getFullMonthName(key, statsTimeframe), ...d };
+                });
+
+                let chartData = statsTimeframe === 'daily' && chartDataRaw.length > 30 ? chartDataRaw.slice(-30) : chartDataRaw;
+                
+                let bestPeriod = { name: '-', val: 0 };
+                // Best period should ideally look at the same dataset as average, 
+                // but let's keep it on "chartDataRaw" so it finds the best all-time record regardless of average filter.
+                chartDataRaw.forEach(d => {
+                    const val = showMoneyInStats ? d.totalVal : d.totalUnits;
+                    if (val >= bestPeriod.val) bestPeriod = { name: d.shortName, val: val };
+                });
+
+                // --- MODIFIED: Average Calculation with Lookback ---
+                // Filter the data based on avgLookback state (0 = all, N = last N items)
+                let dataForAvg = chartDataRaw;
+                if (avgLookback > 0) {
+                     dataForAvg = chartDataRaw.slice(-avgLookback);
+                }
+                
+                // Recalculate sum for average
+                const sumVal = dataForAvg.reduce((acc, d) => acc + d.totalVal, 0);
+                const sumUnits = dataForAvg.reduce((acc, d) => acc + d.totalUnits, 0);
+                
+                const avg = dataForAvg.length ? (showMoneyInStats ? sumVal : sumUnits) / dataForAvg.length : 0;
+
+                return { chartData, listData: [...chartDataRaw].reverse(), maxTotal: maxGroupTotal || 1, grandTotal: showMoneyInStats ? grandTotalValue : grandTotalUnits, average: avg, bestPeriod }; 
+            }, [patients, pricePerUnit, showMoneyInStats, statsTimeframe, avgLookback]);
+
+            const handleExportData = () => {
+                const blob = new Blob([JSON.stringify({ patients, pricePerUnit, rubleRate, paymentHistory })], {type:"application/json"});
+                const a = document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=`DB_${Date.now()}.json`; a.click();
+            };
+
+            const handleExportCSV = () => {
+                const headers = ["ID;Name;Date;Note;Units;Paid;PricePerUnit;Total;Currency"];
+                const rows = patients.map(p => {
+                    const total = (p.units * pricePerUnit).toFixed(2);
+                    // Escape quotes in text fields
+                    const safeName = `"${p.name.replace(/"/g, '""')}"`;
+                    const safeNote = `"${(p.note || '').replace(/"/g, '""')}"`;
+                    return `${p.id};${safeName};${p.date};${safeNote};${p.units};${p.paid ? 'Yes' : 'No'};${pricePerUnit};${total};${activeCurrency}`;
+                });
+                
+                // Add BOM (\uFEFF) so Excel opens it as UTF-8 correctly
+                const csvContent = "\uFEFF" + headers.join('') + "\n" + rows.join("\n");
+                const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                const url = URL.createObjectURL(blob);
+                
+                const link = document.createElement("a");
+                link.href = url;
+                link.setAttribute("download", `Dental_Export_${new Date().toISOString().split('T')[0]}.csv`);
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            };
+
+            // --- RESTORED INVOICE GENERATOR ---
+            const generateHTMLInvoice = useCallback(() => {
+                try {
+                    const unpaidList = patients.filter(p => !p.paid);
+                    const tMoney = unpaidList.reduce((acc, p) => acc + (p.units * pricePerUnit), 0);
+                    const tUnits = unpaidList.reduce((acc, p) => acc + p.units, 0);
+                    const curSymbol = getSymbol();
+                    const mult = getMultiplier();
+
+                    const html = `
+                    <!DOCTYPE html>
+                    <html>
+                    <head>
+                        <title>Invoice - Lab Zaur</title>
+                        <meta charset="UTF-8">
+                        <style>
+                            body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; padding: 40px; background-color: #ffffff; color: #111111; }
+                            .header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 40px; border-bottom: 3px solid #f97316; padding-bottom: 20px; }
+                            .brand { font-size: 32px; font-weight: 800; color: #111; letter-spacing: -1px; }
+                            .brand span { color: #f97316; }
+                            .meta { text-align: right; color: #555; line-height: 1.5; font-size: 14px; }
+                            table { width: 100%; border-collapse: collapse; margin-bottom: 30px; }
+                            th { text-align: left; padding: 12px 16px; background: #f3f4f6; color: #111; font-weight: 700; text-transform: uppercase; font-size: 12px; border-bottom: 2px solid #e5e7eb; }
+                            td { padding: 12px 16px; border-bottom: 1px solid #e5e7eb; font-size: 14px; color: #333; }
+                            tr:last-child td { border-bottom: none; }
+                            .checkbox { width: 16px; height: 16px; border: 2px solid #9ca3af; border-radius: 3px; display: inline-block; }
+                            .totals { margin-top: 20px; border-top: 2px solid #e5e7eb; padding-top: 20px; display: flex; justify-content: flex-end; }
+                            .totals-box { text-align: right; }
+                            .total-row { font-size: 14px; margin-bottom: 8px; color: #555; }
+                            .grand-total { font-size: 24px; font-weight: 800; color: #111; margin-top: 10px; }
+                            .grand-total span { color: #f97316; }
+                            .note-text { font-size: 12px; color: #6b7280; margin-left: 8px; font-style: italic; }
+                            .print-btn { position: fixed; top: 20px; right: 20px; background: #f97316; color: white; padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; }
+                            @media print { .print-btn { display: none; } body { padding: 0; } }
+                        </style>
+                    </head>
+                    <body>
+                        <button class="print-btn" onclick="window.print()">🖨️ Print / Save PDF</button>
+                        <div class="header">
+                            <div class="brand">lab_<span>zaur</span></div>
+                            <div class="meta">
+                                <div><strong>INVOICE (Unpaid Items)</strong></div>
+                                <div>Date: ${new Date().toLocaleDateString()}</div>
+                                <div>Currency: ${activeCurrency}</div>
+                            </div>
+                        </div>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Patient Name / Notes</th>
+                                    <th>Date</th>
+                                    <th style="text-align: center;">Qty</th>
+                                    ${pricePerUnit > 0 ? `<th style="text-align: right;">Price (${curSymbol})</th>` : ''}
+                                    <th style="text-align: center; width: 60px;">Check</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${unpaidList.map(p => `
+                                    <tr>
+                                        <td style="font-weight: 500;">
+                                            ${p.name}
+                                            ${p.note ? `<span class="note-text">(${p.note})</span>` : ''}
+                                        </td>
+                                        <td style="color: #666;">${p.date}</td>
+                                        <td style="text-align: center; font-family: monospace; font-size: 15px;">${p.units}</td>
+                                        ${pricePerUnit > 0 ? `<td style="text-align: right;">${(p.units * mult * pricePerUnit).toFixed(0)}</td>` : ''}
+                                        <td style="text-align: center;"><div class="checkbox"></div></td>
+                                    </tr>
+                                `).join('')}
+                                ${unpaidList.length === 0 ? '<tr><td colspan="5" style="text-align:center; padding: 40px; color: #999;">All patients are paid! No items to display.</td></tr>' : ''}
+                            </tbody>
+                        </table>
+                        <div class="totals">
+                            <div class="totals-box">
+                                <div class="total-row">Total Units: <strong>${tUnits}</strong></div>
+                                ${pricePerUnit > 0 ? `<div class="grand-total">Total: <span>${curSymbol} ${(tMoney * mult).toFixed(2)}</span></div>` : ''}
+                            </div>
+                        </div>
+                    </body>
+                    </html>
+                    `;
+                    const blob = new Blob([html], {type:'text/html'});
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a'); a.href=url; a.download='Invoice.html'; a.click();
+                    setTimeout(() => URL.revokeObjectURL(url), 1000);
+                } catch (err) { alert("Error generating invoice"); }
+            }, [patients, pricePerUnit, activeCurrency, getSymbol, getMultiplier]);
+            
+            // --- View Mode Logic ---
+            const containerClass = useMemo(() => {
+                if (viewMode === 'grid') return "grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-2";
+                if (viewMode === 'compact') return "grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-x-4 gap-y-1";
+                return "glass-panel rounded-2xl overflow-hidden divide-y divide-neutral-800";
+            }, [viewMode]);
+
+            return (
+                <div className="min-h-screen p-4 md:p-6 flex flex-col items-center pb-24" onDragOver={onDragOver} onDragLeave={onDragLeave} onDrop={onDrop}>
+                    <div className={`drag-overlay ${isDragging ? 'active' : ''}`}><div className="text-center"><h2 className="text-3xl font-bold text-white mb-2">Drop Backup File</h2></div></div>
+                    
+                    <PaymentModal 
+                        isOpen={isPaymentModalOpen} 
+                        onClose={() => setIsPaymentModalOpen(false)} 
+                        onSubmit={handleAutoPayment}
+                        currencySymbol={getSymbol()}
+                    />
+
+                    {/* NEW: Avg Settings Modal */}
+                    <AvgSettingsModal 
+                        isOpen={isAvgModalOpen} 
+                        onClose={() => setIsAvgModalOpen(false)} 
+                        currentFrame={statsTimeframe}
+                        onFrameChange={setStatsTimeframe}
+                        currentLookback={avgLookback}
+                        onLookbackChange={setAvgLookback}
+                    />
+
+                    <div className="w-full max-w-[1800px] px-2 md:px-6 relative z-10">
+                        {/* Header */}
+                        <div className="mb-6 flex flex-col sm:flex-row justify-between items-center gap-4 animate-enter">
+                            <div className="flex items-center gap-4">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-10 h-10 bg-orange-600 rounded-lg shadow-lg shadow-orange-900/20 flex items-center justify-center text-white hover:scale-105 transition-transform duration-300"><Icons.Logo /></div>
+                                    <h1 className="text-2xl font-bold text-white tracking-tight">lab_<span className="text-orange-500">zaur</span></h1>
+                                </div>
+                                <button onClick={handleExportData} className="w-10 h-10 flex items-center justify-center rounded-lg bg-neutral-900 border border-neutral-800 text-neutral-400 hover:text-orange-500 transition-all hover:scale-110 duration-300"><Icons.Export /></button>
+                                
+                                <button 
+                                    onClick={() => setIsPaymentModalOpen(true)}
+                                    className="h-10 px-4 flex items-center gap-2 rounded-lg bg-emerald-900/40 border border-emerald-500/30 text-emerald-400 hover:bg-emerald-500 hover:text-white transition-all duration-300"
+                                >
+                                    <Icons.Wallet />
+                                    <span className="font-bold text-sm">Add Deposit</span>
+                                </button>
+                            </div>
+                            <div className="flex gap-2">
+                                <div className="bg-neutral-900 p-1 rounded-lg border border-neutral-800 flex items-center">
+                                    {['CAD', 'RUB'].map(curr => (<button key={curr} onClick={() => setActiveCurrency(curr)} className={`px-3 py-1.5 rounded-md text-sm font-bold transition-all duration-300 ${activeCurrency === curr ? (curr==='RUB'?'bg-orange-600 text-white':'bg-neutral-700 text-white') : 'text-neutral-500 hover:text-neutral-300'}`}>{curr}</button>))}
+                                </div>
+                                <div className="bg-neutral-900 p-1 rounded-lg border border-neutral-800 flex items-center">
+                                    {['dashboard', 'settings'].map(v => (<button key={v} onClick={() => setView(v)} className={`capitalize px-3 py-1.5 rounded-md text-sm font-medium transition-all duration-300 ${view === v ? 'bg-neutral-800 text-orange-400' : 'text-neutral-500 hover:text-neutral-300'}`}>{v}</button>))}
+                                </div>
+                            </div>
+                        </div>
+
+                        {view === 'dashboard' && (
+                            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 w-full items-start">
+                                {/* WORK AREA */}
+                                <div className="lg:col-span-8 flex flex-col gap-6">
+                                    <div className="grid grid-cols-3 gap-3 animate-enter" style={{animationDelay: '0.1s'}}>
+                                        <StatCard label="Total Work" value={pricePerUnit > 0 ? formatMoney(totals.totalMoney) : totals.totalUnits} />
+                                        <StatCard label="Paid (Closed)" labelColor="text-emerald-600" valueColor="text-emerald-500" value={pricePerUnit > 0 ? formatMoney(totals.paidMoney) : totals.paidUnits} />
+                                        <div className="glass-panel p-4 rounded-xl flex flex-col items-center justify-center hover:bg-white/5 transition-colors duration-300 border-rose-500/30 border">
+                                            <span className="text-[10px] font-bold uppercase mb-1 text-rose-500">Global Balance (Debt)</span>
+                                            <span className="text-xl font-bold text-rose-500">{pricePerUnit > 0 ? formatMoney(totals.totalMoney - totals.paidMoney) : totals.unpaidUnits}</span>
+                                        </div>
+                                    </div>
+
+                                    {/* Input & Filters */}
+                                    <div className="glass-panel p-4 rounded-2xl shadow-lg animate-enter" style={{animationDelay: '0.2s'}}>
+                                        <form onSubmit={handleAdd} className="flex gap-2 mb-4">
+                                            <input ref={nameInputRef} type="text" placeholder="Name" className="flex-grow p-3 bg-neutral-900 border border-neutral-800 rounded-xl outline-none focus:border-orange-500 text-white transition-all duration-300 focus:bg-neutral-800" value={name} onChange={(e) => setName(e.target.value)} />
+                                            <input type="number" step="0.5" placeholder="Qty" className="w-20 p-3 bg-neutral-900 border border-neutral-800 rounded-xl outline-none focus:border-orange-500 text-center font-bold text-white transition-all duration-300 focus:bg-neutral-800" value={units} onChange={(e) => setUnits(e.target.value)} />
+                                            <button type="submit" className="bg-orange-600 text-white font-semibold px-4 rounded-xl hover:bg-orange-500 active:scale-95 transition-all duration-300 shadow-lg shadow-orange-900/20">Add</button>
+                                        </form>
+                                        <div className="flex flex-col md:flex-row gap-3 pt-3 border-t border-neutral-800 justify-between items-center">
+                                            <div className="flex gap-3 w-full md:w-auto">
+                                                <input type="text" placeholder="Filter..." className="w-full md:w-48 pl-3 pr-3 py-2 bg-neutral-900 rounded-lg text-sm border border-neutral-800 text-white outline-none focus:border-orange-500/50 placeholder-neutral-600 transition-all duration-300" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
+                                                <div className="flex gap-1 bg-neutral-900 p-1 rounded-lg border border-neutral-800 flex-shrink-0">
+                                                    {['all', 'unpaid', 'paid'].map(f => <button key={f} onClick={() => setFilter(f)} className={`capitalize px-3 py-1 text-xs rounded-md transition-all duration-300 ${filter === f ? 'bg-neutral-700 text-white shadow' : 'text-neutral-500 hover:text-neutral-300'}`}>{f}</button>)}
+                                                </div>
+                                            </div>
+                                            
+                                            <div className="flex items-center gap-2">
+                                                <div className="flex bg-neutral-900 p-1 rounded-lg border border-neutral-800">
+                                                    <button onClick={() => setViewMode('list')} title="Standard List" className={`p-1.5 rounded-md transition-all duration-300 ${viewMode === 'list' ? 'bg-neutral-700 text-white shadow' : 'text-neutral-500 hover:text-neutral-300'}`}><Icons.LayoutList /></button>
+                                                    <button onClick={() => setViewMode('compact')} title="Compact" className={`p-1.5 rounded-md transition-all duration-300 ${viewMode === 'compact' ? 'bg-neutral-700 text-white shadow' : 'text-neutral-500 hover:text-neutral-300'}`}><Icons.LayoutCompact /></button>
+                                                    <button onClick={() => setViewMode('grid')} title="Grid" className={`p-1.5 rounded-md transition-all duration-300 ${viewMode === 'grid' ? 'bg-neutral-700 text-white shadow' : 'text-neutral-500 hover:text-neutral-300'}`}><Icons.LayoutGrid /></button>
+                                                </div>
+                                                <div className="w-px h-6 bg-neutral-800 mx-1"></div>
+                                                <div className="flex items-center gap-2 px-2">
+                                                    <span className="text-[10px] uppercase text-neutral-600 font-bold tracking-wide hidden sm:inline">Sort:</span>
+                                                    <SortBtn label="Date" sortKey="date" currentConfig={sortConfig} onSort={handleSort} />
+                                                    <SortBtn label="Name" sortKey="name" currentConfig={sortConfig} onSort={handleSort} />
+                                                    <SortBtn label="Qty" sortKey="units" currentConfig={sortConfig} onSort={handleSort} />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* List */}
+                                    <div className={`p-1 overflow-hidden min-h-[300px] flex-grow animate-enter bg-transparent border-none shadow-none backdrop-blur-0`} style={{animationDelay: '0.3s'}}>
+                                        {patients.length === 0 ? (
+                                            <div className="glass-panel rounded-2xl p-12 text-center text-neutral-600 text-sm flex flex-col items-center gap-2"><span>No records.</span></div>
+                                        ) : (
+                                            <div className={containerClass}>
+                                                {processedPatients.map((p, idx) => (
+                                                    <PatientRow key={p.id} p={p} index={idx} editingDateId={editingDateId} pricePerUnit={pricePerUnit} viewMode={viewMode} formatMoney={formatMoney} onTogglePaid={togglePaid} onUpdateDate={updateDate} onSetEditingDate={setEditingDateId} onUpdateName={(id, val) => updateField(id, 'name', val)} onUpdateNote={(id, val) => updateField(id, 'note', val)} onUpdateUnits={(id, val) => { const v = parseFloat(val); updateField(id, 'units', isNaN(v) ? 0 : v); }} onDelete={deletePatient} />
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
+                                    <div className="text-center"><button onClick={generateHTMLInvoice} className="text-xs text-orange-500 hover:text-orange-400 transition-colors flex items-center justify-center gap-2 mx-auto">Download Invoice</button></div>
+                                </div>
+
+                                {/* RIGHT COLUMN */}
+                                <div className="lg:col-span-4 flex flex-col gap-6 sticky top-4">
+                                     <div className="animate-enter">
+                                        <div className="grid grid-cols-3 gap-3 mb-6">
+                                            <StatCard label="Total Volume" value={showMoneyInStats ? formatMoney(statsData.grandTotal) : statsData.grandTotal.toFixed(0)} />
+                                            <StatCard 
+                                                label={`Avg / ${statsTimeframe === 'monthly' ? 'Month' : 'Day'}`} 
+                                                valueColor="text-neutral-200" 
+                                                value={showMoneyInStats ? formatMoney(statsData.average) : statsData.average.toFixed(0)}
+                                                onClick={() => setIsAvgModalOpen(true)}
+                                            />
+                                            <div className="glass-panel p-4 rounded-xl text-center hover:bg-white/5 transition-colors duration-300">
+                                                <div className="text-[10px] font-bold uppercase text-orange-600 mb-1">Best {statsTimeframe === 'monthly' ? 'Month' : 'Day'}</div>
+                                                <div className="text-xl font-bold text-orange-500">{statsData.bestPeriod.name}</div>
+                                            </div>
+                                        </div>
+
+                                        <div className="glass-panel p-6 rounded-2xl mb-6">
+                                            <div className="flex justify-between items-center mb-6">
+                                                <h3 className="text-lg font-bold text-white">Analytics</h3>
+                                                <div className="flex gap-2">
+                                                    <div className="flex bg-neutral-900 rounded-lg p-0.5 border border-neutral-800">
+                                                        {['monthly', 'daily'].map(t => (<button key={t} onClick={() => setStatsTimeframe(t)} className={`capitalize px-3 py-1 text-xs rounded-md transition-all duration-300 ${statsTimeframe === t ? 'bg-neutral-700 text-white shadow' : 'text-neutral-500'}`}>{t}</button>))}
+                                                    </div>
+                                                    <div className="flex bg-neutral-900 rounded-lg p-0.5 border border-neutral-800">
+                                                        <button onClick={() => setShowMoneyInStats(false)} className={`px-3 py-1 text-xs rounded-md transition-all duration-300 ${!showMoneyInStats ? 'bg-neutral-700 text-white shadow' : 'text-neutral-500'}`}>Units</button>
+                                                        <button onClick={() => setShowMoneyInStats(true)} className={`px-3 py-1 text-xs rounded-md transition-all duration-300 ${showMoneyInStats ? 'bg-neutral-700 text-white shadow' : 'text-neutral-500'}`}>$</button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div className="overflow-x-auto pb-2 mb-4 custom-scrollbar">
+                                                <div className="h-48 flex items-end gap-1 md:gap-2 border-b border-neutral-800 min-w-full px-2" style={{width: statsData.chartData.length > 0 ? 'max-content' : '100%'}}>
+                                                    {statsData.chartData.map((d, i) => {
+                                                        const total = showMoneyInStats ? d.totalVal : d.totalUnits;
+                                                        const paid = showMoneyInStats ? d.paidVal : d.paidUnits;
+                                                        const percent = statsData.maxTotal > 0 ? (total / statsData.maxTotal) * 100 : 0;
+                                                        const paidPercent = total > 0 ? (paid / total) * 100 : 0;
+                                                        return (
+                                                            <div key={d.key} className="relative group flex-1 min-w-[32px] md:min-w-[40px] h-full flex flex-col justify-end items-center">
+                                                                <div className="chart-tooltip absolute -top-12 bg-neutral-800 border border-neutral-700 text-white text-xs rounded px-2 py-1 whitespace-nowrap z-20 shadow-xl">
+                                                                    <div className="font-bold">{d.fullName}</div>
+                                                                    <div>Total: {showMoneyInStats ? formatMoneySimple(total) : total}</div>
+                                                                    <div className="text-emerald-400">Paid: {showMoneyInStats ? formatMoneySimple(paid) : paid}</div>
+                                                                </div>
+                                                                <div style={{height: `${percent}%`, animationDelay: `${i*0.05}s`}} className="bar-grow w-full max-w-[40px] bg-neutral-800 rounded-t-[4px] relative overflow-hidden min-h-[4px] hover:bg-neutral-700 transition-colors duration-300">
+                                                                    <div style={{height: `${paidPercent}%`}} className="absolute bottom-0 w-full bg-gradient-to-t from-emerald-900 to-emerald-500 opacity-80 transition-all duration-500"></div>
+                                                                </div>
+                                                                <div className="mt-2 text-[10px] text-neutral-500 font-medium transform -rotate-45 sm:rotate-0 origin-top-left sm:origin-center whitespace-nowrap">{d.shortName}</div>
+                                                            </div>
+                                                        );
+                                                    })}
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div className="glass-panel p-4 rounded-2xl space-y-3 max-h-[500px] overflow-y-auto custom-scrollbar">
+                                            <h3 className="text-sm font-bold text-neutral-400 px-2 uppercase sticky top-0 bg-[#1e1e1e99] backdrop-blur-md py-2 z-10">History ({statsTimeframe})</h3>
+                                            {statsData.listData.map((m, i) => {
+                                                const total = showMoneyInStats ? m.totalVal : m.totalUnits;
+                                                const paid = showMoneyInStats ? m.paidVal : m.paidUnits;
+                                                const pending = total - paid;
+                                                return (
+                                                    <div key={m.key} className="flex justify-between items-center p-3 rounded-xl hover:bg-white/5 transition-colors duration-300 border border-transparent hover:border-neutral-800 animate-enter" style={{animationDelay: `${Math.min(i * 0.05, 1)}s`}}>
+                                                        <div className="flex items-center gap-3">
+                                                            <div className={`w-2 h-10 rounded-full ${pending === 0 ? 'bg-emerald-600' : (paid === 0 ? 'bg-neutral-700' : 'bg-orange-500')}`}></div>
+                                                            <div>
+                                                                <div className="font-medium text-white">{m.fullName}</div>
+                                                                <div className="text-xs text-neutral-500 flex gap-2">
+                                                                    <span className="text-emerald-500">Done: {showMoneyInStats ? formatMoneySimple(paid) : paid}</span>
+                                                                    {pending > 0 && <span className="text-rose-500">Left: {showMoneyInStats ? formatMoneySimple(pending) : pending}</span>}
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div className="text-right">
+                                                            <div className="font-bold text-white text-lg">{showMoneyInStats ? formatMoneySimple(total) : total}</div>
+                                                        </div>
+                                                    </div>
+                                                )
+                                            })}
+                                        </div>
+                                     </div>
+                                </div>
+                            </div>
+                        )}
+                        
+                        {view === 'settings' && (
+                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-10 animate-enter">
+                                 <div className="glass-panel p-6 rounded-2xl space-y-4">
+                                    <h3 className="font-bold text-white mb-4">Core Settings</h3>
+                                    <div className="flex justify-between items-center border-b border-neutral-800 pb-2"><span className="text-neutral-400 text-sm">Price (CAD)</span><input type="number" className="bg-transparent text-right w-20 font-bold text-white outline-none" value={pricePerUnit} onChange={e=>setPricePerUnit(parseFloat(e.target.value)||0)}/></div>
+                                    <div className="flex justify-between items-center border-b border-neutral-800 pb-2"><span className="text-neutral-400 text-sm">Rate (CAD->RUB)</span><input type="number" className="bg-transparent text-right w-20 font-bold text-white outline-none" value={rubleRate} onChange={e=>setRubleRate(parseFloat(e.target.value)||0)}/></div>
+                                    
+                                    <button 
+                                        onClick={handleExportCSV}
+                                        className="w-full py-3 mt-4 rounded-xl bg-neutral-800 text-neutral-300 hover:bg-neutral-700 hover:text-white font-medium transition-all flex items-center justify-center gap-2"
+                                    >
+                                        <Icons.FileText /> Download .csv (Excel)
+                                    </button>
+
+                                    <div className="pt-4 text-xs text-neutral-500 border-t border-neutral-800 mt-4">
+                                        <p>Drag & Drop .json backup file to restore data.</p>
+                                    </div>
+                                 </div>
+
+                                 <div className="glass-panel p-6 rounded-2xl overflow-hidden flex flex-col max-h-[400px]">
+                                     <h3 className="font-bold text-white mb-4 flex items-center gap-2"><Icons.Wallet /> Payment Log</h3>
+                                     <div className="overflow-y-auto custom-scrollbar flex-grow space-y-2 pr-1">
+                                         {paymentHistory.length === 0 && <div className="text-neutral-600 text-sm italic">No deposits recorded yet.</div>}
+                                         {paymentHistory.map(ph => (
+                                             <div key={ph.id} className="flex justify-between items-center p-2 bg-neutral-900/50 rounded border border-neutral-800">
+                                                 <div>
+                                                     <div className="text-white text-sm font-bold">{ph.date}</div>
+                                                     <div className="text-neutral-500 text-[10px]">{ph.note || 'No note'}</div>
+                                                 </div>
+                                                 <div className="text-emerald-500 font-mono font-bold">
+                                                     + {ph.amount} {ph.currency}
+                                                 </div>
+                                             </div>
+                                         ))}
+                                     </div>
+                                 </div>
+                             </div>
+                        )}
+                    </div>
+                </div>
+            );
+        };
+
+        ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+    </script>
+</body>
+</html>
